@@ -48,7 +48,7 @@ class MyInfoConnector {
     }
   }
 
-  load = function (config) {
+  load(config) {
     if (config.DEBUG_LEVEL) {
       CONFIG.DEBUG_LEVEL = config.DEBUG_LEVEL;
       logger.level = CONFIG.DEBUG_LEVEL;
@@ -130,7 +130,7 @@ class MyInfoConnector {
    * @param {string} txnNo - Transaction ID from requesting digital services for cross referencing.
    * @returns {Promise} - Returns the Person Data (Payload decrypted + Signature validated)
    */
-  getMyInfoPersonData = function (authCode, state, txnNo) {
+  getMyInfoPersonData(authCode, state, txnNo) {
     if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
@@ -157,7 +157,7 @@ class MyInfoConnector {
    * @param {string} state - Identifier that represents the user's session with the client, provided earlier during the authorise API call.
    * @returns {Promise} - Returns the Access Token
    */
-  getAccessToken = function (authCode, state) {
+  getAccessToken(authCode, state) {
     if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
@@ -194,7 +194,7 @@ class MyInfoConnector {
    * @param {string} txnNo - Transaction ID from requesting digital services for cross referencing.
    * @returns {Promise} Returns the Person Data (Payload decrypted + Signature validated)
    */
-  getPersonData = function (accessToken, txnNo) {
+  getPersonData(accessToken, txnNo) {
     if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
@@ -227,7 +227,7 @@ class MyInfoConnector {
    * @param {string} state - Identifier that represents the user's session with the client, provided earlier during the authorise API call.
    * @returns {Promise} - Returns the Access Token
    */
-  callTokenAPI = function (authCode, privateKey, state) {
+  callTokenAPI(authCode, privateKey, state) {
 
     let cacheCtl = "no-cache";
     let contentType = "application/x-www-form-urlencoded";
@@ -298,7 +298,7 @@ class MyInfoConnector {
    * 
    * @returns {Promise} Returns result from calling Person API
    */
-   callPersonAPI = function (sub, accessToken, txnNo, privateKey) {
+   callPersonAPI(sub, accessToken, txnNo, privateKey) {
 
     let urlLink = CONFIG.PERSON_URL + "/" + sub;
     let cacheCtl = "no-cache";
@@ -371,7 +371,7 @@ class MyInfoConnector {
    * 
    * @returns {Promise} Returns decrypted result from calling Person API
    */
-  getPersonDataWithKey = function (accessToken, txnNo, privateKey) {
+  getPersonDataWithKey(accessToken, txnNo, privateKey) {
     return new Promise((resolve, reject) => {
       this.securityHelper.verifyJWS(CONFIG.MYINFO_SIGNATURE_CERT_PUBLIC_CERT, accessToken)
         .then(decodedToken => {
@@ -385,7 +385,7 @@ class MyInfoConnector {
             logger.error('Error: ', constant.UINFIN_NOT_FOUND);
             return Promise.reject(constant.UINFIN_NOT_FOUND);
           }
-          return this.#callPersonAPI(uinfin, accessToken, txnNo, privateKey);
+          return this.callPersonAPI(uinfin, accessToken, txnNo, privateKey);
         })
         .then(personRes => {
           if (personRes && personRes.msg) {
