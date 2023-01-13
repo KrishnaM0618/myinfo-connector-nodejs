@@ -9,6 +9,8 @@ var log4js = require('log4js');
 var logger = log4js.getLogger('MyInfoNodeJSConnector');
 // ####################
 logger.level = CONFIG.DEBUG_LEVEL;
+const isInitialized = false;
+const securityHelper = require('./lib/securityHelper');
 // Exporting the Module
 // ####################
 
@@ -34,22 +36,19 @@ logger.level = CONFIG.DEBUG_LEVEL;
  */
 class MyInfoConnector {
 
-  #isInitialized = false;
-  #securityHelper;
-
   constructor(config) {
     try {
-      this.#load(config);
-      this.#isInitialized = true;
+      this.load(config);
+      this.isInitialized = true;
       this.securityHelper = require('./lib/securityHelper');
     } catch (error) {
       logger.error('Error (Library Init): ', error);
-      this.#isInitialized = false;
+      this.isInitialized = false;
       throw error;
     }
   }
 
-  #load = function (config) {
+  load = function (config) {
     if (config.DEBUG_LEVEL) {
       CONFIG.DEBUG_LEVEL = config.DEBUG_LEVEL;
       logger.level = CONFIG.DEBUG_LEVEL;
@@ -132,7 +131,7 @@ class MyInfoConnector {
    * @returns {Promise} - Returns the Person Data (Payload decrypted + Signature validated)
    */
   getMyInfoPersonData = function (authCode, state, txnNo) {
-    if (!this.#isInitialized) {
+    if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
     // checking if the state provided is not undefined.
@@ -159,7 +158,7 @@ class MyInfoConnector {
    * @returns {Promise} - Returns the Access Token
    */
   getAccessToken = function (authCode, state) {
-    if (!this.#isInitialized) {
+    if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
     return new Promise((resolve, reject) => {
@@ -168,7 +167,7 @@ class MyInfoConnector {
           logger.debug('Client Private Key: ', CONFIG.CLIENT_SECURE_CERT);
           let certificate = result;
           let privateKey = (certificate.key);
-          return this.#callTokenAPI(authCode, privateKey, state);
+          return this.callTokenAPI(authCode, privateKey, state);
         })
         .then(tokenResult => {
           let token = tokenResult.msg;
@@ -196,7 +195,7 @@ class MyInfoConnector {
    * @returns {Promise} Returns the Person Data (Payload decrypted + Signature validated)
    */
   getPersonData = function (accessToken, txnNo) {
-    if (!this.#isInitialized) {
+    if (!this.isInitialized) {
       throw (constant.ERROR_UNKNOWN_NOT_INIT);
     }
     return new Promise((resolve, reject) => {
@@ -204,7 +203,7 @@ class MyInfoConnector {
         .then(result => {
           logger.debug('Client Private Key: ', CONFIG.CLIENT_SECURE_CERT);
           let privateKey = (result.key);
-          return this.#getPersonDataWithKey(accessToken, txnNo, privateKey);
+          return this.getPersonDataWithKey(accessToken, txnNo, privateKey);
         })
         .then(callPersonRequestResult => {
           logger.debug('Person Data: ', callPersonRequestResult);
@@ -228,7 +227,7 @@ class MyInfoConnector {
    * @param {string} state - Identifier that represents the user's session with the client, provided earlier during the authorise API call.
    * @returns {Promise} - Returns the Access Token
    */
-  #callTokenAPI = function (authCode, privateKey, state) {
+  callTokenAPI = function (authCode, privateKey, state) {
 
     let cacheCtl = "no-cache";
     let contentType = "application/x-www-form-urlencoded";
@@ -299,7 +298,7 @@ class MyInfoConnector {
    * 
    * @returns {Promise} Returns result from calling Person API
    */
-   #callPersonAPI = function (sub, accessToken, txnNo, privateKey) {
+   callPersonAPI = function (sub, accessToken, txnNo, privateKey) {
 
     let urlLink = CONFIG.PERSON_URL + "/" + sub;
     let cacheCtl = "no-cache";
@@ -372,7 +371,7 @@ class MyInfoConnector {
    * 
    * @returns {Promise} Returns decrypted result from calling Person API
    */
-  #getPersonDataWithKey = function (accessToken, txnNo, privateKey) {
+  getPersonDataWithKey = function (accessToken, txnNo, privateKey) {
     return new Promise((resolve, reject) => {
       this.securityHelper.verifyJWS(CONFIG.MYINFO_SIGNATURE_CERT_PUBLIC_CERT, accessToken)
         .then(decodedToken => {
